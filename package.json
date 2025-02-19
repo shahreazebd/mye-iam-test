@@ -1,0 +1,21 @@
+{
+  "name": "mye-iam-test",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "db:generate": "npx @better-auth/cli generate",
+    "db:migrate": "npx @better-auth/cli migrate"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.8",
+    "@libsql/kysely-libsql": "^0.4.1",
+    "better-auth": "^1.1.18",
+    "dotenv": "^16.4.7",
+    "hono": "^4.7.2",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "tsx": "^4.7.1"
+  }
+}
