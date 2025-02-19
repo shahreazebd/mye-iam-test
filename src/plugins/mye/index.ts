@@ -36,10 +36,6 @@ export function myePlugin() {
     schema: {
       user: {
         fields: {
-          birthday: {
-            type: "date",
-            required: true,
-          },
           userType: {
             type: "string",
             required: true,
@@ -59,7 +55,7 @@ export function myePlugin() {
           companyUuid: {
             type: "string",
             required: false,
-            // returned: true,
+            returned: true,
           },
           companyName: {
             type: "string",
@@ -75,7 +71,12 @@ export function myePlugin() {
           },
           role: {
             type: "string",
-            required: false,
+            required: true,
+            returned: true,
+            references: {
+              model: "rbac",
+              field: "id",
+            },
           },
         },
       },

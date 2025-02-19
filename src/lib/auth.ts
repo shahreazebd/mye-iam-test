@@ -3,7 +3,7 @@ import { LibsqlDialect } from "@libsql/kysely-libsql";
 import { env } from "./env";
 import { myePlugin } from "../plugins/mye";
 import { bearer, jwt, openAPI } from "better-auth/plugins";
-import { userRoutes } from "../plugins/user";
+import { myeRBAC } from "../plugins/rbac";
 
 const dialect = new LibsqlDialect({
   url: env.TURSO_DATABASE_URL,
@@ -18,5 +18,5 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  plugins: [myePlugin(), openAPI(), userRoutes(), bearer(), jwt()],
+  plugins: [openAPI(), bearer(), jwt(), myePlugin(), myeRBAC()],
 });
