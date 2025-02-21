@@ -5,6 +5,8 @@ import { myePlugin } from "../plugins/mye";
 import { bearer, jwt, openAPI } from "better-auth/plugins";
 import { myeRBAC } from "../plugins/rbac";
 
+import fs from "node:fs/promises";
+
 const dialect = new LibsqlDialect({
   url: env.TURSO_DATABASE_URL,
   authToken: env.TURSO_AUTH_TOKEN,
@@ -20,3 +22,10 @@ export const auth = betterAuth({
   },
   plugins: [openAPI(), bearer(), jwt(), myePlugin(), myeRBAC()],
 });
+
+try {
+  await fs.access("openapi.json");
+} catch (e) {
+  const schema = await auth.api.generateOpenAPISchema();
+  await fs.writeFile("openapi.json", JSON.stringify(schema, null, 2));
+}

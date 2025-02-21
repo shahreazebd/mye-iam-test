@@ -6,6 +6,8 @@ import { env } from "./lib/env";
 
 const app = new Hono();
 
+import openapi from "../openapi.json";
+
 app.use(cors());
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
@@ -14,12 +16,16 @@ app.get("/", (c) => {
   return c.json({ status: "Ok", timestamp: Date.now() });
 });
 
+app.get("/doc", (c) => {
+  return c.json(openapi);
+});
+
 serve(
   {
     fetch: app.fetch,
-    port: 3000,
+    port: env.PORT,
   },
   (info) => {
-    console.log(`Server is running on http://${info.address}:${info.port}`);
+    console.log(`Server is running on http://localhost:${info.port}`);
   }
 );
