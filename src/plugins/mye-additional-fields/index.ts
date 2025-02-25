@@ -1,9 +1,9 @@
 import { type BetterAuthPlugin } from "better-auth";
 import { createAuthMiddleware } from "better-auth/plugins";
-// import { createAuthMiddleware } from "better-auth/plugins";
 import { z } from "zod";
 
 import { APIError } from "better-auth/api";
+import { randomUUID } from "node:crypto";
 
 const SignUpSchema = z
   .object({
@@ -12,13 +12,12 @@ const SignUpSchema = z
     phoneNumber: z.string(),
     countryCode: z.string().length(2),
     timezone: z.string(),
-    birthday: z.string(),
     userType: z.enum(["parent", "child"]),
     companyName: z.string().optional(),
     companyAddress: z.string().optional(),
     postCode: z.string().optional(),
-    role: z.enum(["admin", "user"]),
-    companyUuid: z.string().optional(),
+    role: z.enum(["admin", "user", "cs"]),
+    companyUuid: z.string().uuid().optional(),
   })
   .superRefine((val, ctx) => {
     if (val.userType === "child" && !val.companyUuid) {
@@ -30,7 +29,7 @@ const SignUpSchema = z
     }
   });
 
-export function myePlugin() {
+export function myeAdditionalFields() {
   return {
     id: "mye-plugin",
     schema: {
@@ -55,7 +54,6 @@ export function myePlugin() {
           companyUuid: {
             type: "string",
             required: false,
-            returned: true,
           },
           companyName: {
             type: "string",
@@ -73,48 +71,57 @@ export function myePlugin() {
             type: "string",
             required: true,
             returned: true,
-            references: {
-              model: "rbac",
-              field: "id",
-            },
           },
         },
       },
     },
 
-    middlewares: [
-      {
-        path: "/sign-up/email",
-        middleware: createAuthMiddleware(async (ctx) => {
-          const result = await SignUpSchema.safeParse(ctx.body);
+    hooks: {
+      before: [
+        {
+          matcher: (context) => context.path.endsWith("/sign-up/email"),
+          handler: createAuthMiddleware(async (ctx) => {
+            const result = await SignUpSchema.safeParse(ctx.body);
 
-          if (result.error) {
-            throw new APIError("BAD_REQUEST", {
-              message: "Validation failed",
-              details: result.error,
-            });
-          }
+            if (result.error) {
+              throw new APIError("BAD_REQUEST", {
+                message: "Validation failed",
+                details: result.error,
+              });
+            }
 
-          ctx.body = result.data;
-        }),
-      },
-    ],
+            if (result.data.userType === "parent") {
+              result.data.companyUuid = randomUUID();
 
-    // hooks: {
-    //   after: [
-    //     {
-    //       matcher: (context) => context.path.endsWith("/sign-in/email"),
-    //       handler: createAuthMiddleware(async (ctx) => {
-    //         const user = await ctx.context.adapter.findMany({
-    //           model: "user",
-    //           where: [{ operator: "eq", field: "email", value: ctx.body.email }],
-    //         });
+              await ctx.context.adapter.update({
+                model: "user",
+                update: {
+                  companyUuid: result.data.companyUuid,
+                },
+                where: [{ operator: "eq", field: "email", value: ctx.body.email }],
+              });
+            }
 
-    //         // const { bir } = ctx.body;
-    //         // return { context: ctx };
-    //       }),
-    //     },
-    //   ],
-    // },
+            ctx.body = result.data;
+          }),
+        },
+      ],
+      after: [
+        {
+          matcher: (context) => context.path.endsWith("/sign-up/email"),
+          handler: createAuthMiddleware(async (ctx) => {
+            if (ctx.body.userType === "parent") {
+              await ctx.context.adapter.update({
+                model: "user",
+                update: {
+                  companyUuid: randomUUID(),
+                },
+                where: [{ operator: "eq", field: "email", value: ctx.body.email }],
+              });
+            }
+          }),
+        },
+      ],
+    },
   } satisfies BetterAuthPlugin;
 }

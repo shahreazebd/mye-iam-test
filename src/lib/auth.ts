@@ -1,32 +1,38 @@
 import { betterAuth } from "better-auth";
-import { LibsqlDialect } from "@libsql/kysely-libsql";
 import { env } from "./env";
-import { myePlugin } from "../plugins/mye";
-import { bearer, jwt, multiSession, openAPI } from "better-auth/plugins";
-import { myeRBAC } from "../plugins/rbac";
+import { myeAdditionalFields } from "../plugins/mye-additional-fields";
+import { bearer, jwt, openAPI } from "better-auth/plugins";
+
+import pg from "pg";
+const { Pool } = pg;
 
 import fs from "node:fs/promises";
 
-const dialect = new LibsqlDialect({
-  url: env.TURSO_DATABASE_URL,
-  authToken: env.TURSO_AUTH_TOKEN,
-});
-
 export const auth = betterAuth({
-  database: {
-    dialect,
-    type: "sqlite",
-  },
+  database: new Pool({
+    connectionString: env.DATABASE_URL,
+  }),
   emailAndPassword: {
     enabled: true,
+  },
+  trustedOrigins: [env.BETTER_AUTH_URL, "https://www.manageyourecommerce.com"],
+
+  socialProviders: {
+    google: {
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
+      mapProfileToUser: (profile) => {
+        console.log(profile);
+
+        return profile;
+      },
+    },
   },
   plugins: [
     openAPI(),
     bearer(),
     jwt({ jwt: { expirationTime: "5m" } }),
-    multiSession({ maximumSessions: 1 }),
-    myePlugin(),
-    myeRBAC(),
+    myeAdditionalFields(),
   ],
 });
 

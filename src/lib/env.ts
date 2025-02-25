@@ -20,8 +20,9 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
   BETTER_AUTH_SECRET: z.string().default("secret"),
   BETTER_AUTH_URL: z.string().default("http://localhost:3000"),
-  TURSO_DATABASE_URL: z.string(),
-  TURSO_AUTH_TOKEN: z.string(),
+  GOOGLE_CLIENT_ID: z.string(),
+  GOOGLE_CLIENT_SECRET: z.string(),
+  DATABASE_URL: z.string().url(),
 });
 
 export let env: z.infer<typeof envSchema>;

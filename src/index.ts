@@ -16,6 +16,10 @@ app.get("/", (c) => {
   return c.json({ status: "Ok", timestamp: Date.now() });
 });
 
+app.get("/dashboard", (c) => {
+  return c.json({ status: "Dashboard", timestamp: Date.now() });
+});
+
 app.get("/doc", (c) => {
   return c.json(openapi);
 });
