@@ -4,9 +4,11 @@ import { z } from "zod";
 
 import { APIError } from "better-auth/api";
 import { randomUUID } from "node:crypto";
+import { generateAvatar } from "../../lib/helpers";
 
 const SignUpSchema = z
   .object({
+    name: z.string(),
     email: z.string().email(),
     password: z.string().min(8),
     phoneNumber: z.string(),
@@ -18,6 +20,7 @@ const SignUpSchema = z
     postCode: z.string().optional(),
     role: z.enum(["admin", "user", "cs"]),
     companyUuid: z.string().uuid().optional(),
+    image: z.string().url().optional(),
   })
   .superRefine((val, ctx) => {
     if (val.userType === "child" && !val.companyUuid) {
@@ -90,18 +93,6 @@ export function myeAdditionalFields() {
               });
             }
 
-            if (result.data.userType === "parent") {
-              result.data.companyUuid = randomUUID();
-
-              await ctx.context.adapter.update({
-                model: "user",
-                update: {
-                  companyUuid: result.data.companyUuid,
-                },
-                where: [{ operator: "eq", field: "email", value: ctx.body.email }],
-              });
-            }
-
             ctx.body = result.data;
           }),
         },
@@ -115,6 +106,16 @@ export function myeAdditionalFields() {
                 model: "user",
                 update: {
                   companyUuid: randomUUID(),
+                },
+                where: [{ operator: "eq", field: "email", value: ctx.body.email }],
+              });
+            }
+
+            if (!ctx.body.image) {
+              await ctx.context.adapter.update({
+                model: "user",
+                update: {
+                  image: generateAvatar(ctx.body.name),
                 },
                 where: [{ operator: "eq", field: "email", value: ctx.body.email }],
               });
