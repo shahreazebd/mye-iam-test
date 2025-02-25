@@ -2,11 +2,11 @@ import { betterAuth } from "better-auth";
 import { env } from "./env";
 import { myeAdditionalFields } from "../plugins/mye-additional-fields";
 import { bearer, jwt, openAPI } from "better-auth/plugins";
+import fs from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 
 import pg from "pg";
 const { Pool } = pg;
-
-import fs from "node:fs/promises";
 
 export const auth = betterAuth({
   database: new Pool({
@@ -22,9 +22,14 @@ export const auth = betterAuth({
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
       mapProfileToUser: (profile) => {
-        console.log(profile);
-
-        return profile;
+        return {
+          userType: "parent",
+          phoneNumber: "n/a",
+          countryCode: "n/a",
+          timezone: "n/a",
+          role: "admin",
+          companyUuid: randomUUID(),
+        };
       },
     },
   },
