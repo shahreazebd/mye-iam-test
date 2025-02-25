@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth";
 import { LibsqlDialect } from "@libsql/kysely-libsql";
 import { env } from "./env";
 import { myePlugin } from "../plugins/mye";
-import { bearer, jwt, openAPI } from "better-auth/plugins";
+import { bearer, jwt, multiSession, openAPI } from "better-auth/plugins";
 import { myeRBAC } from "../plugins/rbac";
 
 import fs from "node:fs/promises";
@@ -20,7 +20,14 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  plugins: [openAPI(), bearer(), jwt(), myePlugin(), myeRBAC()],
+  plugins: [
+    openAPI(),
+    bearer(),
+    jwt({ jwt: { expirationTime: "5m" } }),
+    multiSession({ maximumSessions: 1 }),
+    myePlugin(),
+    myeRBAC(),
+  ],
 });
 
 try {
