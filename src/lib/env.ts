@@ -1,17 +1,5 @@
 import { ZodError, z } from "zod";
 
-// process.loadEnvFile()
-
-import path from "node:path";
-import dotenv from "dotenv";
-
-dotenv.config({
-  path: path.resolve(
-    process.cwd(),
-    process.env.NODE_ENV === "test" ? ".env.test" : ".env"
-  ),
-});
-
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   LOG_LEVEL: z
@@ -28,7 +16,7 @@ const envSchema = z.object({
 export let env: z.infer<typeof envSchema>;
 
 try {
-  env = envSchema.parse(process.env);
+  env = envSchema.parse(Bun.env);
 } catch (error) {
   if (error instanceof ZodError) {
     console.error("Invalid env");

@@ -101,23 +101,23 @@ export function myeAdditionalFields() {
         {
           matcher: (context) => context.path.endsWith("/sign-up/email"),
           handler: createAuthMiddleware(async (ctx) => {
-            if (ctx.body.userType === "parent") {
+            if (ctx.body["userType"] === "parent") {
               await ctx.context.adapter.update({
                 model: "user",
                 update: {
                   companyUuid: randomUUID(),
                 },
-                where: [{ operator: "eq", field: "email", value: ctx.body.email }],
+                where: [{ operator: "eq", field: "email", value: ctx.body["email"] }],
               });
             }
 
-            if (!ctx.body.image) {
+            if (!ctx.body["image"]) {
               await ctx.context.adapter.update({
                 model: "user",
                 update: {
-                  image: generateAvatar(ctx.body.name),
+                  image: generateAvatar(ctx.body["image"]),
                 },
-                where: [{ operator: "eq", field: "email", value: ctx.body.email }],
+                where: [{ operator: "eq", field: "email", value: ctx.body["email"] }],
               });
             }
           }),
